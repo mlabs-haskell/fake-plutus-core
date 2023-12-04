@@ -1,0 +1,66 @@
+cabal-version:      3.0
+name:               fake-plutus-core
+version:            1.0.0
+synopsis:           Rig for measuring new primops
+description:        Rig for measuring new primops
+homepage:           https://github.com/mlabs-haskell/fake-plutus-core
+license:            Apache-2.0
+license-file:       LICENSE.md
+author:             Koz Ross
+maintainer:         koz@mlabs.city
+bug-reports:        https://github.com/mlabs-haskell/fake-plutus-core/issues
+copyright:          (C) MLabs 2023
+category:           Plutus
+tested-with:        GHC ==9.6.3
+build-type:         Simple
+extra-source-files:
+  CHANGELOG.md
+  README.md
+
+-- Common sections
+
+common lang
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wredundant-constraints
+    -Wmissing-export-lists -Wmissing-deriving-strategies
+
+  build-depends:    base >=4.14.3.0 && <4.18.1.0.0
+  default-language: Haskell2010
+
+common test-lang
+  import:        lang
+  ghc-options:   -O2 -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    , QuickCheck
+    , tasty
+    , tasty-quickcheck
+    , test-utils
+
+common bench-lang
+  import:        lang
+  ghc-options:   -O2 -rtsopts -fproc-alignment=64 "-with-rtsopts=-A32m -T"
+  build-depends:
+    , fake-plutus-core
+    , tasty-bench
+
+-- Library
+
+library
+  import:          lang
+  exposed-modules:
+    Baseline.UInt64
+    Bitwise
+    Core
+    Derived
+    Optimized.UInt64
+
+  build-depends:
+    , bytestring
+    , plutus-integer-bytestring
+
+  hs-source-dirs:  src
+
+-- Tests
+
+-- Benchmarks

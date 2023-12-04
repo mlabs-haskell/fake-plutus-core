@@ -1,0 +1,17 @@
+packages: ./fake-plutus-core.cabal
+
+tests: true
+
+benchmarks: true
+
+documentation: true
+
+test-show-details: direct
+
+package fake-plutus-core
+  ghc-options: -Werror
+
+source-repository-package
+  type: git
+  location: https://github.com/mlabs-haskell/plutus-integer-bytestring
+  tag: 624f11c
