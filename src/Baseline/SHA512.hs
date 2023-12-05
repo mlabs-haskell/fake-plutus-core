@@ -4,6 +4,12 @@
 
 module Baseline.SHA512 (sha512) where
 
+import Baseline.UInt64
+  ( UInt64,
+    andUInt64,
+    fromUInt64,
+    toUInt64,
+  )
 import Core
   ( addInteger,
     appendBS,
@@ -29,10 +35,10 @@ sha512 input = sha512CtxFinalize (sha512CtxUpdate sha512CtxInit input)
 -- Helpers
 
 data SHA512Ctx = SHA512Ctx
-  { sz :: Integer,
-    sz_hi :: Integer,
+  { sz :: UInt64,
+    sz_hi :: UInt64,
     buf :: ByteString,
-    h :: [Integer]
+    h :: [UInt64]
   }
 
 sha512CtxInit :: SHA512Ctx
@@ -44,14 +50,14 @@ sha512CtxInit =
       -- so it could be written as one (it's just tedious).
       buf = BS.replicate 128 0x00,
       h =
-        [ 0x6a09_e667_f3bc_c908,
-          0xbb67_ae85_84ca_a73b,
-          0x3c6e_f372_fe94_f82b,
-          0xa54f_f53a_5f1d_36f1,
-          0x510e_527f_ade6_82d1,
-          0x9b05_688c_2b3e_6c1f,
-          0x1f83_d9ab_fb41_bd6b,
-          0x5be0_cd19_137e_2179
+        [ toUInt64 0x6a09_e667_f3bc_c908,
+          toUInt64 0xbb67_ae85_84ca_a73b,
+          toUInt64 0x3c6e_f372_fe94_f82b,
+          toUInt64 0xa54f_f53a_5f1d_36f1,
+          toUInt64 0x510e_527f_ade6_82d1,
+          toUInt64 0x9b05_688c_2b3e_6c1f,
+          toUInt64 0x1f83_d9ab_fb41_bd6b,
+          toUInt64 0x5be0_cd19_137e_2179
         ]
     }
 
@@ -59,8 +65,8 @@ sha512CtxUpdate :: SHA512Ctx -> ByteString -> SHA512Ctx
 sha512CtxUpdate ctx bs =
   let sz1 = sz ctx
       sz_hi1 = sz_hi ctx
-      index = quotInteger sz1 128
-      toFill = subInteger 128 index
+      index = andUInt64 sz1 (toUInt64 0x7f)
+      toFill = subInteger 128 (fromUInt64 index)
       len = lenBS bs
       (sz2, sz_hi2) = addWithOverflow sz1 len sz_hi1
       ctx2 = ctx {sz = sz2, sz_hi = sz_hi2}

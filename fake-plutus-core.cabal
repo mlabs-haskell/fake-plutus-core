@@ -57,6 +57,7 @@ library
 
   build-depends:
     , bytestring
+    , deepseq
     , plutus-integer-bytestring
 
   hs-source-dirs:  src
@@ -64,3 +65,10 @@ library
 -- Tests
 
 -- Benchmarks
+
+benchmark uint64-bench
+  import:         bench-lang
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:  deepseq
+  hs-source-dirs: bench/uint64

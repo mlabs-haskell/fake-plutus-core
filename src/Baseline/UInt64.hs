@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
@@ -8,9 +9,11 @@ module Baseline.UInt64
     shiftUInt64,
     rotateUInt64,
     andUInt64,
+    addOverflowUInt64,
   )
 where
 
+import Control.DeepSeq (NFData)
 import Core
   ( addInteger,
     eqInteger,
@@ -22,6 +25,7 @@ import Core
     remInteger,
     subInteger,
   )
+import Data.Bool (Bool (False, True))
 import Data.Function (($))
 import Derived
   ( absInteger,
@@ -32,6 +36,7 @@ import GHC.Err (error)
 import GHC.Num (Integer)
 
 newtype UInt64 = UInt64 Integer
+  deriving (NFData) via Integer
 
 toUInt64 :: Integer -> UInt64
 toUInt64 i =
@@ -42,6 +47,15 @@ toUInt64 i =
 
 fromUInt64 :: UInt64 -> Integer
 fromUInt64 (UInt64 i) = i
+
+addOverflowUInt64 :: UInt64 -> UInt64 -> (Bool, UInt64)
+addOverflowUInt64 (UInt64 x) (UInt64 y) =
+  let added = addInteger x y
+      overflow = quotInteger added limit64
+   in ite
+        (ltInteger 0 overflow)
+        (True, UInt64 $ remInteger added limit64)
+        (False, UInt64 added)
 
 -- Copies Data.Bits semantics (positive means left, negative means right)
 shiftUInt64 :: UInt64 -> Integer -> UInt64
