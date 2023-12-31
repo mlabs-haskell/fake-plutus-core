@@ -10,6 +10,7 @@ module Baseline.UInt64
     rotateUInt64,
     andUInt64,
     addOverflowUInt64,
+    addUInt64,
   )
 where
 
@@ -37,6 +38,11 @@ import GHC.Num (Integer)
 
 newtype UInt64 = UInt64 Integer
   deriving (NFData) via Integer
+
+addUInt64 :: UInt64 -> UInt64 -> UInt64
+addUInt64 (UInt64 x) (UInt64 y) =
+  let added = addInteger x y
+   in UInt64 $ remInteger added limit64
 
 toUInt64 :: Integer -> UInt64
 toUInt64 i =

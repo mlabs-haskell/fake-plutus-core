@@ -6,6 +6,8 @@ module Baseline.SHA512 (sha512) where
 
 import Baseline.UInt64
   ( UInt64,
+    addOverflowUInt64,
+    addUInt64,
     andUInt64,
     fromUInt64,
     toUInt64,
@@ -26,6 +28,7 @@ import Core
 import Data.Bool (Bool)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
+import Derived (and)
 import GHC.Num (Integer)
 
 -- Based on https://github.com/haskell-hvr/cryptohash-sha512/blob/master/cbits/hs_sha512.h
@@ -68,12 +71,13 @@ sha512CtxUpdate ctx bs =
       index = andUInt64 sz1 (toUInt64 0x7f)
       toFill = subInteger 128 (fromUInt64 index)
       len = lenBS bs
-      (sz2, sz_hi2) = addWithOverflow sz1 len sz_hi1
+      (overflowed, sz_added) = addOverflowUInt64 sz1 (toUInt64 len)
+      (sz2, sz_hi2) = ite overflowed (sz_added, addUInt64 sz_hi1 (toUInt64 1)) (sz_added, sz_hi1)
       ctx2 = ctx {sz = sz2, sz_hi = sz_hi2}
       dataIx = 0
       (ctx3, len2, dataIx1) =
         ite
-          (and (ltInteger 0 index) (leInteger toFill len))
+          (and (nonZeroUInt64 index) (leInteger toFill len))
           (rollInPartial ctx2 len dataIx bs index toFill)
           (ctx2, len, dataIx)
       (ctx4, len3, dataIx2) = rollInFull ctx3 len2 dataIx1 bs
@@ -112,14 +116,6 @@ sha512CtxFinalize ctx =
 
 sha512DoChunk :: SHA512Ctx -> ByteString -> Integer -> SHA512Ctx
 sha512DoChunk = _
-
-addWithOverflow :: Integer -> Integer -> Integer -> (Integer, Integer)
-addWithOverflow x y overflow =
-  let added = addInteger x y
-   in ite
-        (leInteger limit added)
-        (quotInteger added limit, addInteger overflow 1)
-        (added, overflow)
 
 limit :: Integer
 limit = 18_446_744_073_709_551_616

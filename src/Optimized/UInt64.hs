@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Optimized.UInt64
@@ -9,6 +10,7 @@ module Optimized.UInt64
     rotateUInt64,
     andUInt64,
     addOverflowUInt64,
+    addUInt64,
   )
 where
 
@@ -21,6 +23,7 @@ import Core
     integerToBS,
     ite,
     lenBS,
+    remInteger,
     sliceBS,
   )
 import Data.Bool (Bool (False, True))
@@ -36,6 +39,12 @@ toUInt64 i = UInt64 $ integerToBS True 8 i
 
 fromUInt64 :: UInt64 -> Integer
 fromUInt64 (UInt64 bs) = bsToInteger True bs
+
+addUInt64 :: UInt64 -> UInt64 -> UInt64
+addUInt64 (UInt64 x) (UInt64 y) =
+  let added = addInteger (bsToInteger True x) (bsToInteger True y)
+      reduced = remInteger added limit64
+   in toUInt64 reduced
 
 -- Copies Data.Bits semantics (positive means left, negative means right)
 shiftUInt64 :: UInt64 -> Integer -> UInt64
@@ -57,3 +66,8 @@ addOverflowUInt64 (UInt64 x) (UInt64 y) =
         (eqInteger len 8)
         (False, UInt64 converted)
         (True, UInt64 (sliceBS converted 1 8))
+
+-- Helpers
+
+limit64 :: Integer
+limit64 = 18_446_744_073_709_551_616

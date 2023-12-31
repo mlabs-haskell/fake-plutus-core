@@ -1,5 +1,6 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
@@ -23,11 +24,18 @@ module Core
     consBS,
     integerToBS,
     bsToInteger,
+    chooseList,
+    headList,
+    tailList,
+    consList,
+    emptyList,
+    eqBS,
+    nullList,
   )
 where
 
 import Control.Category ((.))
-import Data.Bool (Bool)
+import Data.Bool (Bool (False, True))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.Eq ((==))
@@ -37,11 +45,58 @@ import Data.Ord ((<), (<=))
 import Data.Semigroup ((<>))
 import Data.Tuple (fst, snd)
 import GHC.ByteOrder (ByteOrder (BigEndian, LittleEndian))
+import GHC.Err (error)
 import GHC.Num (Integer, (*), (+), (-))
 import GHC.Real (fromIntegral, quot, rem)
 import Naive (fromByteString, toByteString)
 
 -- Fake primops
+
+nullList ::
+  forall (a :: Type).
+  [a] ->
+  Bool
+nullList = \case
+  [] -> True
+  (_ : _) -> False
+
+chooseList ::
+  forall (a :: Type) (b :: Type).
+  [a] ->
+  b ->
+  b ->
+  b
+chooseList xs whenNil whenCons = case xs of
+  [] -> whenNil
+  _ -> whenCons
+
+headList ::
+  forall (a :: Type).
+  [a] ->
+  a
+headList = \case
+  [] -> error "empty list"
+  (x : _) -> x
+
+tailList ::
+  forall (a :: Type).
+  [a] ->
+  [a]
+tailList = \case
+  [] -> error "empty list"
+  (_ : xs) -> xs
+
+consList ::
+  forall (a :: Type).
+  a ->
+  [a] ->
+  [a]
+consList = (:)
+
+emptyList ::
+  forall (a :: Type).
+  [a]
+emptyList = []
 
 eqInteger :: Integer -> Integer -> Bool
 eqInteger = (==)
@@ -106,3 +161,6 @@ leInteger = (<=)
 
 consBS :: Integer -> ByteString -> ByteString
 consBS w8 = BS.cons (fromIntegral w8)
+
+eqBS :: ByteString -> ByteString -> Bool
+eqBS = (==)
