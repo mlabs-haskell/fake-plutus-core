@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Optimized.NQueens (Position, nqueens) where
+module NQueens (Position, nqueens) where
 
 import Bitwise
   ( andBS,

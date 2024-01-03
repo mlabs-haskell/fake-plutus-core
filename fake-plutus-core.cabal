@@ -49,12 +49,10 @@ common bench-lang
 library
   import:          lang
   exposed-modules:
-    Baseline.UInt64
     Bitwise
     Core
     Derived
-    Optimized.NQueens
-    Optimized.UInt64
+    NQueens
 
   build-depends:
     , bytestring
@@ -62,14 +60,3 @@ library
     , plutus-integer-bytestring
 
   hs-source-dirs:  src
-
--- Tests
-
--- Benchmarks
-
-benchmark uint64-bench
-  import:         bench-lang
-  type:           exitcode-stdio-1.0
-  main-is:        Main.hs
-  build-depends:  deepseq
-  hs-source-dirs: bench/uint64
