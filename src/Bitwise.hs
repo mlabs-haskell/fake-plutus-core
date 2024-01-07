@@ -6,6 +6,7 @@
 module Bitwise
   ( andBS,
     orBS,
+    xorBS,
     shiftBS,
     rotateBS,
     broadcastBS,
@@ -21,6 +22,7 @@ import Data.Bits
   ( complement,
     unsafeShiftL,
     unsafeShiftR,
+    xor,
     (.&.),
     (.|.),
   )
@@ -178,6 +180,40 @@ orBS requestedLength bs1 bs2
             srcByte :: Word8 <- peekByteOff shorterSrcPtr i
             dstByte :: Word8 <- peekByteOff dstPtr i
             pokeByteOff dstPtr i (srcByte .|. dstByte)
+
+-- Similar convention to conversions: if we request a specific size, that's what
+-- we get, but if not, we pad to whichever is longer.
+xorBS :: Integer -> ByteString -> ByteString -> ByteString
+xorBS requestedLength bs1 bs2
+  | requestedLength <= 0 =
+      if BS.length bs1 < BS.length bs2
+        then xorNoLimit bs1 bs2
+        else xorNoLimit bs2 bs1
+  | otherwise =
+      let len = fromIntegral requestedLength
+       in if BS.length bs1 < BS.length bs2
+            then xorLimit len bs1 bs2
+            else xorLimit len bs2 bs1
+  where
+    xorNoLimit :: ByteString -> ByteString -> ByteString
+    xorNoLimit shorter longer = BSI.unsafeCreate (BS.length longer) $ \dstPtr ->
+      BS.useAsCStringLen shorter $ \(shorterSrcPtr, shorterLen) ->
+        BS.useAsCStringLen longer $ \(longerSrcPtr, longerLen) -> do
+          copyBytes (castPtr dstPtr) longerSrcPtr longerLen
+          for_ [0 .. shorterLen - 1] $ \i -> do
+            srcByte :: Word8 <- peekByteOff shorterSrcPtr i
+            dstByte :: Word8 <- peekByteOff dstPtr i
+            pokeByteOff dstPtr i (srcByte `xor` dstByte)
+    xorLimit :: Int -> ByteString -> ByteString -> ByteString
+    xorLimit limit shorter longer = BSI.unsafeCreate limit $ \dstPtr ->
+      BS.useAsCStringLen shorter $ \(shorterSrcPtr, shorterLen) ->
+        BS.useAsCString longer $ \longerSrcPtr -> do
+          fillBytes dstPtr 0x00 limit
+          copyBytes (castPtr dstPtr) longerSrcPtr limit
+          for_ [0 .. min shorterLen limit - 1] $ \i -> do
+            srcByte :: Word8 <- peekByteOff shorterSrcPtr i
+            dstByte :: Word8 <- peekByteOff dstPtr i
+            pokeByteOff dstPtr i (srcByte `xor` dstByte)
 
 -- We follow the principle that bits are numbered starting from the end. A shift
 -- is an index map: positive means indexes map upward (aka left shift), negative

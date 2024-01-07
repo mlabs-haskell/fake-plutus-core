@@ -53,10 +53,10 @@ library
     Core
     Derived
     NQueens
+    SHA512
 
   build-depends:
     , bytestring
-    , deepseq
     , plutus-integer-bytestring
 
   hs-source-dirs:  src
