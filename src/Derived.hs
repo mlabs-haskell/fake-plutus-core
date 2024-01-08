@@ -12,12 +12,14 @@ module Derived
     not,
     and,
     or,
+    eqBool,
     negateInteger,
     absInteger,
     minInteger,
     foldl,
     maxInteger,
     mapList,
+    oddInteger,
   )
 where
 
@@ -39,6 +41,12 @@ import Data.Functor (fmap)
 import Data.Kind (Type)
 import GHC.Err (error)
 import GHC.Num (Integer)
+
+oddInteger :: Integer -> Bool
+oddInteger i = eqInteger 1 (remInteger (absInteger i) 2)
+
+eqBool :: Bool -> Bool -> Bool
+eqBool x y = ite x y (not y)
 
 mapList ::
   forall (a :: Type) (b :: Type).

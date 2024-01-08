@@ -52,6 +52,7 @@ library
     Bitwise
     Core
     Derived
+    Ed25519
     NQueens
     SHA512
 
